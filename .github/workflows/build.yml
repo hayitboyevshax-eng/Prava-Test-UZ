@@ -1,0 +1,39 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Android papkasi repoda yoʻq — avtomatik yaratiladi
+      - name: Android platformasini yaratish
+        run: |
+          flutter create --platforms=android --org uz.prava --project-name prava_test_uz .
+          rm -rf test
+          sed -i 's/android:label="[^"]*"/android:label="Prava Test UZ"/' android/app/src/main/AndroidManifest.xml
+
+      - run: flutter pub get
+
+      - name: APK yigʻish
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Prava-Test-UZ-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
